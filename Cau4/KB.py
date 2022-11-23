@@ -11,10 +11,21 @@ def clause2str(clause):
     return STR_SPLIT.join(clause)
 
 def clean_clause(clause):
-    return sorted(list(set(clause)), key=abs)
+    """
+    ['-B', 'A', '-B', '-A', 'C', 'B']
+    ->
+    ['-A', 'A', '-B', 'B', 'C']
+    """
+    def compare(lit):
+        if is_neg(lit):
+            return abs(lit) + '0'
+        else:
+            return abs(lit) + '1'
+    return sorted(list(set(clause)), key=compare)
 
 def clean_clauses(clauses):
-    return [clean_clause(clause) for clause in clauses]
+    cleans = [clean_clause(clause) for clause in clauses]
+    return sorted(cleans)
 
 def read_file(filepath):
     clauses = []
@@ -25,6 +36,7 @@ def read_file(filepath):
             del data[-1]
 
         alpha = data[0].split(STR_SPLIT)
+        alpha = clean_clause(alpha)
 
         for i in range(int(data[1])):
             line = data[2 + i]
@@ -34,12 +46,6 @@ def read_file(filepath):
         clauses = clean_clauses(clauses)
 
     return alpha, clauses
-
-def add_alpha(clauses, alpha):
-    neg_alpha = neg_clause(alpha)
-    for lit in neg_alpha:
-        clauses.append([lit])
-    return clauses
 
 def is_neg(lit):
     if lit[0] == NEG_SYMBOL:
@@ -68,21 +74,32 @@ def neg_clause(clause):
         ans.append(neg_lit(lit))
     return ans
 
-filepath = 'input/input.txt'
-alpha, clauses = read_file(filepath)
+def add_alpha(clauses, alpha):
+    neg_alpha = neg_clause(alpha)
+    for lit in neg_alpha:
+        clauses.append([lit])
+    return clauses
 
-print(alpha)
-print(clauses)
+def complent(lit1, lit2):
+    if abs(lit1) == abs(lit2) and is_neg(lit1) != is_neg(lit2):
+        return True
+    return False
 
-def resolve(clause1, clause2):
+def is_true(clause):
+    for i in range(len(clause)):
+        for j in range(i + 1, len(clause)):
+            if complent(clause[i], clause[j]):
+                return True
+    return False
+
+def pl_resolve(clause1, clause2):
     clauses = []
-    neg_clause2 = neg_clause(clause2)
 
     for i in range(len(clause1)):
-        for j in range(len(neg_clause2)):
-            if clause1[i] == neg_clause2[j]:
+        for j in range(len(clause2)):
+            if complent(clause1[i], clause2[j]):
                 cp_clause1 = deepcopy(clause1)
-                cp_neg_clause2 = deepcopy(neg_clause2)
+                cp_neg_clause2 = deepcopy(clause2)
                 del cp_clause1[i]
                 del cp_neg_clause2[j]
 
@@ -92,4 +109,60 @@ def resolve(clause1, clause2):
 
     return clauses
 
-print(resolve(clauses[0], clauses[2]))
+def pl_resolution(alpha, clauses):
+    alpha = deepcopy(alpha)
+    clauses = deepcopy(clauses)
+
+    clauses = add_alpha(clauses, alpha)
+    clauses = clean_clauses(clauses)
+
+    step_clauses = []
+
+    while True:
+        new_clauses = []
+
+        for i in range(len(clauses)):
+            for j in range(i + 1, len(clauses)):
+                resolvents = pl_resolve(clauses[i], clauses[j])
+
+                for resolvent in resolvents:
+                    if is_true(resolvent):
+                        continue
+
+                    if resolvent not in clauses and resolvent not in new_clauses:
+                        new_clauses.append(clean_clause(resolvent))
+
+        step_clauses.append(new_clauses)
+        clauses = clauses + new_clauses
+
+        if len(new_clauses) == 0:
+            return False, step_clauses
+
+        if [] in new_clauses:
+            return True, step_clauses
+
+def write_txt(filepath, solve, step_clauses):
+    with open(filepath, "w") as f:
+        for step in step_clauses:
+            f.write(str(len(step)) + '\n')
+            if len(step) >= 1 and step[0] == []:
+                step.append([])
+                del step[0]
+            for clause in step:
+                if clause == []:
+                    f.write('{}\n')
+                else:
+                    f.write(clause2str(clause) + '\n')
+
+        if solve:
+            f.write('YES')
+        else:
+            f.write('NO')
+
+filepath = 'input/input2.txt'
+alpha, clauses = read_file(filepath)
+solve, step_clauses = pl_resolution(alpha, clauses)
+
+outpath = 'output/input2.txt'
+write_txt(outpath, solve, step_clauses)
+
