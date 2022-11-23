@@ -1,3 +1,5 @@
+import os
+import shutil
 from copy import deepcopy
 
 STR_SPLIT = ' OR '
@@ -145,6 +147,7 @@ def write_txt(filepath, solve, step_clauses):
     with open(filepath, "w") as f:
         for step in step_clauses:
             f.write(str(len(step)) + '\n')
+            step = sorted(step)
             if len(step) >= 1 and step[0] == []:
                 step.append([])
                 del step[0]
@@ -159,10 +162,20 @@ def write_txt(filepath, solve, step_clauses):
         else:
             f.write('NO')
 
-filepath = 'input/input2.txt'
-alpha, clauses = read_file(filepath)
-solve, step_clauses = pl_resolution(alpha, clauses)
+def solve_end2end(input_path, output_path):
+    alpha, clauses = read_file(input_path)
+    solve, step_clauses = pl_resolution(alpha, clauses)
+    write_txt(output_path, solve, step_clauses)
 
-outpath = 'output/input2.txt'
-write_txt(outpath, solve, step_clauses)
+def make_dir(dir):
+    try:
+        shutil.rmtree(dir)
+    except:
+        pass
+
+    try:
+        os.mkdir(dir)
+    except:
+        pass
+    
 
