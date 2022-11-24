@@ -163,9 +163,15 @@ def write_txt(filepath, solve, step_clauses):
             f.write('NO')
 
 def solve_end2end(input_path, output_path):
-    alpha, clauses = read_file(input_path)
-    solve, step_clauses = pl_resolution(alpha, clauses)
-    write_txt(output_path, solve, step_clauses)
+    try:
+        alpha, clauses = read_file(input_path)
+        solve, step_clauses = pl_resolution(alpha, clauses)
+        print('YES' if solve else 'NO')
+        write_txt(output_path, solve, step_clauses)
+    except Exception as error:
+        print('*'*10, 'Found ERROR', '*'*10)
+        print(error)
+        raise
 
 def make_dir(dir):
     try:
