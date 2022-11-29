@@ -16,13 +16,13 @@ def clean_clause(clause):
     """
     ['-B', 'A', '-B', '-A', 'C', 'B']
     ->
-    ['-A', 'A', '-B', 'B', 'C']
+    ['A', '-A', 'B', '-B', 'C']
     """
     def compare(lit):
         if is_neg(lit):
-            return abs(lit) + '0'
-        else:
             return abs(lit) + '1'
+        else:
+            return abs(lit) + '0'
     return sorted(list(set(clause)), key=compare)
 
 def clean_clauses(clauses):
@@ -111,7 +111,7 @@ def pl_resolve(clause1, clause2):
 
     return clauses
 
-def pl_resolution(alpha, clauses):
+def pl_resolution(alpha, clauses, debug=False):
     alpha = deepcopy(alpha)
     clauses = deepcopy(clauses)
 
@@ -133,6 +133,8 @@ def pl_resolution(alpha, clauses):
 
                     if resolvent not in clauses and resolvent not in new_clauses:
                         new_clauses.append(clean_clause(resolvent))
+                        if debug:
+                            print(resolvent, "from:", clause2str(clauses[i]), "with", clause2str(clauses[j]))
 
         step_clauses.append(new_clauses)
         clauses = clauses + new_clauses
@@ -142,6 +144,9 @@ def pl_resolution(alpha, clauses):
 
         if [] in new_clauses:
             return True, step_clauses
+
+        if debug:
+            print('-'*10)
 
 def write_txt(filepath, solve, step_clauses):
     with open(filepath, "w") as f:
@@ -162,10 +167,10 @@ def write_txt(filepath, solve, step_clauses):
         else:
             f.write('NO')
 
-def solve_end2end(input_path, output_path):
+def solve_end2end(input_path, output_path, debug=False):
     try:
         alpha, clauses = read_file(input_path)
-        solve, step_clauses = pl_resolution(alpha, clauses)
+        solve, step_clauses = pl_resolution(alpha, clauses, debug)
         print('YES' if solve else 'NO')
         write_txt(output_path, solve, step_clauses)
     except Exception as error:

@@ -2,5 +2,5 @@ S OR -T
 4
 P OR Q
 -Q OR -R OR S
--T OR R
+R OR -T
 P
