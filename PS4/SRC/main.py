@@ -1,9 +1,9 @@
 import os
 from KB import *
 
-INPUT_DIR = 'input'
-OUTPUT_DIR = 'output'
-DEBUG = True
+INPUT_DIR = 'INPUT'
+OUTPUT_DIR = 'OUTPUT'
+DEBUG = False # print detail for debug
 
 make_dir(OUTPUT_DIR)
 
